@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# interaction block
+case $BLOCK_BUTTON in
+	1) playerctl play-pause ;; # left click toggle playback
+	2) playerctl stop ;; # middle click
+	3) ;; # right click
+	4) playerctl next ;; # Scroll up next
+	5) playerctl previous ;; # Scroll down prev
+esac
+
+stat=$(playerctl status)
+if [ $stat == "Playing" ]; then
+	stat="" # play icon
+else
+	stat="" # pause icon
+fi
+
+pos=$(playerctl position)
+m=$(printf "%01d" $(echo "scale=0; $pos / 60" | bc))
+s=$(printf "%02d" $(echo "scale=0; $pos % 60" | bc))
+
+duration=$(playerctl metadata mpris:length)
+tM=$(printf "%01d" $(echo "scale=0;$duration/60000000"|bc))
+tS=$(printf "%02d" $(echo "scale=0; ($duration % 60000000) / 1000000" | bc))
+
+echo "$stat $(playerctl metadata --format '{{ artist }} - {{ title }}') [$m:$s/$tM:$tS]"
+#color=$(./colorPicker)
+#echo -e "\e[38;2;${color:1:2};${color:3:2};${color:5:2}m $stat $(playerctl metadata --format '{{ artist }} - {{ title }}') [$m:$s/$tM:$tS]\e[0m"

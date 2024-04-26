@@ -1,0 +1,59 @@
+#!/bin/bash
+
+# switch sources with input argument
+arg="${1:-}"
+
+BT="" #bluetooth mac address
+case "$arg" in
+  --monitor)
+    SINK="" # fill in
+    pacmd set-default-sink "$SINK"
+    pacmd list-sink-inputs | grep index | while read line; do
+      pacmd move-sink-input `echo $line | cut -f2 -d' '` "$SINK"
+    done
+    notify-send "Switched to monitor!"
+    bluetoothctl disconnect $BT > /dev/null
+    echo "" > ~/.lastSink # speaker icon
+    ;;
+
+  --wired)
+    SINK="" # fill in
+    pacmd set-default-sink "$SINK"
+    pacmd list-sink-inputs | grep index | while read line; do
+      pacmd move-sink-input `echo $line | cut -f2 -d' '` "$SINK"
+    done
+    notify-send "Switched to wired headphones!"
+    bluetoothctl disconnect $BT > /dev/null
+    echo "" > ~/.lastSink # headphones icon
+    ;;
+
+  --bt)
+    bluetoothctl connect $BT > /dev/null
+    sleep 2 #So it can connect
+    SINK="" # fill in, probably includes mac address
+    pacmd set-default-sink "$SINK"
+    pacmd list-sink-inputs | grep index | while read line; do
+ 	  pacmd move-sink-input `echo $line | cut -f2 -d' '` "$SINK"
+    done
+    #Potentially add turning on bt too
+    notify-send "Switching to bluetooth!"
+    echo "" > ~/.lastSink # bt icon
+    ;;
+esac
+
+lastSink=$(cat ~/.lastSink)
+lastSink=${lastSink:-""}
+if [ $(pactl get-sink-mute @DEFAULT_SINK@ | awk '{print $2}') = "yes" ]; then
+	lastSink="" # mute icon
+fi
+
+# interactions
+case $BLOCK_BUTTON in
+    1) pactl set-sink-mute @DEFAULT_SINK@ toggle;;
+    2) rhythmbox ;;
+    3) ;;
+    4) pactl set-sink-volume @DEFAULT_SINK@ +5% ;;
+    5) pactl set-sink-volume @DEFAULT_SINK@ -5% ;;
+esac
+
+echo "$lastSink: $(pactl get-sink-volume @DEFAULT_SINK@ | awk '{print $5}')"

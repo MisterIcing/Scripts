@@ -1,0 +1,15 @@
+#!/bin/bash
+
+artPath=$(playerctl metadata mpris:artUrl | sed 's/file:\/\///')
+if [ -z "$artPath" ] || [ ! -f "$artPath" ]; then
+	echo "#ffeead"
+	exit
+fi
+
+convert "$artPath" -resize 100x100\! -colorspace RGB "/tmp/artRGB.jpg"
+colors=$(convert "/tmp/artRGB.jpg" -colors 256 -depth 8 -format %c histogram:info:- | sed 's/^[[:space:]]*//' | grep -oP "(?<=#)[0-9a-f]{6}")
+commons=$(echo "$colors" | sort | uniq -c | sort -nr | head -n 1 | awk '{print "#" $2}')
+
+rm -f "/tmp/artRGB.jpg"
+
+echo $commons
